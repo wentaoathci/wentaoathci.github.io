@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>减脂餐随机选择器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f5f0e8;
+      --surface: #fffaf2;
+      --surface-strong: #ffffff;
+      --text: #233025;
+      --muted: #687368;
+      --primary: #2f7d4f;
+      --primary-dark: #23613c;
+      --border: #ddd1c2;
+      --shadow: 0 24px 70px rgba(48, 39, 28, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(84, 153, 102, 0.2), transparent 34rem),
+        linear-gradient(135deg, var(--background), #edf4e8);
+    }
+
+    button,
+    select,
+    input {
+      font: inherit;
+    }
+
+    .app-shell {
+      width: min(980px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 56px 0;
+    }
+
+    .hero,
+    .controls,
+    .meal-card,
+    .overview-card {
+      border: 1px solid var(--border);
+      background: rgba(255, 250, 242, 0.88);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .hero {
+      padding: clamp(28px, 5vw, 52px);
+      border-radius: 32px 32px 18px 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--primary);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin-bottom: 16px;
+      font-size: clamp(2.15rem, 7vw, 4.5rem);
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+    }
+
+    .intro {
+      max-width: 760px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.8;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 16px;
+      margin: 18px 0;
+      padding: 20px;
+      border-radius: 18px;
+    }
+
+    .field-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    label,
+    .toggle {
+      color: var(--muted);
+      font-size: 0.93rem;
+      font-weight: 700;
+    }
+
+    select {
+      min-width: 150px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      background: var(--surface-strong);
+    }
+
+    .toggle {
+      display: flex;
+      min-height: 48px;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    .toggle input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+
+    button {
+      margin-left: auto;
+      padding: 13px 22px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--primary);
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 10px 24px rgba(47, 125, 79, 0.22);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .meal-card,
+    .overview-card {
+      padding: clamp(22px, 4vw, 34px);
+    }
+
+    .meal-card {
+      border-radius: 18px;
+    }
+
+    .overview-card {
+      margin-top: 18px;
+      border-radius: 18px 18px 32px 32px;
+    }
+
+    .meal-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .meal-header h2 {
+      margin-bottom: 0;
+      font-size: clamp(1.45rem, 3vw, 2rem);
+    }
+
+    #calorie-summary {
+      margin-bottom: 0;
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .meal-output {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+    }
+
+    .meal-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.35fr) 1fr;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid rgba(221, 209, 194, 0.76);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.58);
+    }
+
+    dt {
+      font-weight: 900;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .overview-card summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .overview-card summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .overview-title {
+      margin-bottom: 0;
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+    }
+
+    .summary-hint {
+      color: var(--primary);
+      font-size: 0.9rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .overview-intro {
+      margin: 12px 0 20px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .food-group {
+      padding: 16px;
+      border: 1px solid rgba(221, 209, 194, 0.76);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.58);
+    }
+
+    .food-group h3 {
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+    }
+
+    .food-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .food-chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: #f3eadf;
+      font-size: 0.9rem;
+      line-height: 1.3;
+    }
+
+    .food-chip.is-vegetarian::after {
+      content: " 素";
+      color: var(--primary);
+      font-weight: 900;
+    }
+
+    @media (max-width: 720px) {
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app-shell {
+        width: min(100% - 20px, 980px);
+        padding: 20px 0;
+      }
+
+      .controls,
+      .meal-header,
+      .overview-card summary {
+        align-items: stretch;
+      }
+
+      .overview-card summary {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      .field-group,
+      select {
+        width: 100%;
+      }
+
+      .meal-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero" aria-labelledby="app-title">
+      <p class="eyebrow">Balanced plate builder</p>
+      <h1 id="app-title">减脂餐随机选择器</h1>
+      <p class="intro">
+        随机生成一份结构均衡的减脂餐，包含蛋白质、蔬菜、粗粮、主食和豆类。
+        每个分类会随机选择 1–2 种食材，并给出粗略热量估算，方便快速搭配日常餐盘。
+      </p>
+    </section>
+
+    <section class="controls" aria-label="餐食控制选项">
+      <div class="field-group">
+        <label for="calorie-level">热量档位</label>
+        <select id="calorie-level">
+          <option value="low">低热量</option>
+          <option value="medium" selected>中等热量</option>
+          <option value="high">高热量</option>
+        </select>
+      </div>
+
+      <label class="toggle">
+        <input id="vegetarian-mode" type="checkbox" />
+        <span>素食模式</span>
+      </label>
+
+      <button id="generate-meal" type="button">生成减脂餐</button>
+    </section>
+
+    <section class="meal-card" aria-live="polite" aria-labelledby="meal-title">
+      <div class="meal-header">
+        <h2 id="meal-title">本次随机餐单</h2>
+        <p id="calorie-summary">预估总热量：—</p>
+      </div>
+
+      <dl id="meal-output" class="meal-output">
+        <div class="meal-row">
+          <dt>蛋白质：</dt>
+          <dd id="protein-output">点击“生成减脂餐”开始。</dd>
+        </div>
+        <div class="meal-row">
+          <dt>蔬菜：</dt>
+          <dd id="vegetables-output">—</dd>
+        </div>
+        <div class="meal-row">
+          <dt>粗粮：</dt>
+          <dd id="whole-grains-output">—</dd>
+        </div>
+        <div class="meal-row">
+          <dt>主食：</dt>
+          <dd id="main-carbs-output">—</dd>
+        </div>
+        <div class="meal-row">
+          <dt>豆类：</dt>
+          <dd id="legumes-output">—</dd>
+        </div>
+      </dl>
+    </section>
+
+    <details class="overview-card" open>
+      <summary>
+        <h2 class="overview-title">食材总览菜单</h2>
+        <span class="summary-hint">点击展开 / 收起</span>
+      </summary>
+      <p class="overview-intro">
+        这里可以查看每个分类下的所有可随机食材。标记“素”的食材会在素食模式中保留。
+      </p>
+      <div id="food-overview" class="overview-grid"></div>
+    </details>
+  </main>
+
+  <script>
+    const foodCategories = {
+      protein: {
+        label: "蛋白质",
+        outputId: "protein-output",
+        items: [
+          { name: "鸡胸肉", calories: 165, vegetarian: false },
+          { name: "鸡蛋", calories: 140, vegetarian: true },
+          { name: "豆腐", calories: 95, vegetarian: true },
+          { name: "希腊酸奶", calories: 100, vegetarian: true },
+          { name: "鱼肉", calories: 160, vegetarian: false },
+          { name: "瘦牛肉", calories: 180, vegetarian: false },
+          { name: "天贝", calories: 190, vegetarian: true },
+        ],
+      },
+      vegetables: {
+        label: "蔬菜",
+        outputId: "vegetables-output",
+        items: [
+          { name: "西兰花", calories: 35, vegetarian: true },
+          { name: "菠菜", calories: 25, vegetarian: true },
+          { name: "卷心菜", calories: 30, vegetarian: true },
+          { name: "胡萝卜", calories: 45, vegetarian: true },
+          { name: "西葫芦", calories: 25, vegetarian: true },
+          { name: "蘑菇", calories: 30, vegetarian: true },
+          { name: "黄瓜", calories: 15, vegetarian: true },
+        ],
+      },
+      wholeGrains: {
+        label: "粗粮",
+        outputId: "whole-grains-output",
+        items: [
+          { name: "糙米", calories: 110, vegetarian: true },
+          { name: "燕麦", calories: 150, vegetarian: true },
+          { name: "藜麦", calories: 120, vegetarian: true },
+          { name: "大麦", calories: 100, vegetarian: true },
+          { name: "荞麦", calories: 115, vegetarian: true },
+        ],
+      },
+      mainCarbs: {
+        label: "主食",
+        outputId: "main-carbs-output",
+        items: [
+          { name: "红薯", calories: 115, vegetarian: true },
+          { name: "米饭", calories: 130, vegetarian: true },
+          { name: "全麦面包", calories: 120, vegetarian: true },
+          { name: "玉米", calories: 95, vegetarian: true },
+          { name: "土豆", calories: 110, vegetarian: true },
+        ],
+      },
+      legumes: {
+        label: "豆类",
+        outputId: "legumes-output",
+        items: [
+          { name: "扁豆", calories: 115, vegetarian: true },
+          { name: "鹰嘴豆", calories: 135, vegetarian: true },
+          { name: "黑豆", calories: 130, vegetarian: true },
+          { name: "毛豆", calories: 120, vegetarian: true },
+          { name: "红腰豆", calories: 125, vegetarian: true },
+        ],
+      },
+    };
+
+    const calorieMultipliers = {
+      low: 0.75,
+      medium: 1,
+      high: 1.25,
+    };
+
+    let previousMeal = new Set();
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function shuffle(items) {
+      return [...items].sort(() => Math.random() - 0.5);
+    }
+
+    function getAvailableItems(items, vegetarianOnly) {
+      return vegetarianOnly ? items.filter((item) => item.vegetarian) : [...items];
+    }
+
+    function chooseItems(items, count, previousNames) {
+      const freshItems = items.filter((item) => !previousNames.has(item.name));
+      const pool = freshItems.length >= count ? freshItems : items;
+      return shuffle(pool).slice(0, count);
+    }
+
+    function formatItems(items, calorieLevel) {
+      const multiplier = calorieMultipliers[calorieLevel];
+
+      return items
+        .map((item) => {
+          const calories = Math.round(item.calories * multiplier);
+          return `${item.name}（约 ${calories} 千卡）`;
+        })
+        .join("、");
+    }
+
+    function estimateCalories(meal, calorieLevel) {
+      const multiplier = calorieMultipliers[calorieLevel];
+      const baseCalories = Object.values(meal)
+        .flat()
+        .reduce((sum, item) => sum + item.calories, 0);
+
+      return Math.round(baseCalories * multiplier);
+    }
+
+    function buildMeal({ calorieLevel, vegetarianOnly }) {
+      return Object.entries(foodCategories).reduce((meal, [categoryKey, category]) => {
+        const availableItems = getAvailableItems(category.items, vegetarianOnly);
+        const itemCount = getRandomInt(1, 2);
+
+        meal[categoryKey] = chooseItems(availableItems, itemCount, previousMeal);
+        return meal;
+      }, {});
+    }
+
+    function renderMeal(meal, calorieLevel) {
+      Object.entries(foodCategories).forEach(([categoryKey, category]) => {
+        const output = document.getElementById(category.outputId);
+        output.textContent = formatItems(meal[categoryKey], calorieLevel);
+      });
+
+      document.getElementById("calorie-summary").textContent =
+        `预估总热量：${estimateCalories(meal, calorieLevel)} 千卡`;
+    }
+
+    function renderOverview() {
+      const overview = document.getElementById("food-overview");
+
+      overview.innerHTML = Object.values(foodCategories)
+        .map((category) => {
+          const foods = category.items
+            .map((item) => {
+              const vegetarianClass = item.vegetarian ? " is-vegetarian" : "";
+              return `<li class="food-chip${vegetarianClass}">${item.name} · ${item.calories} 千卡</li>`;
+            })
+            .join("");
+
+          return `
+            <section class="food-group">
+              <h3>${category.label}</h3>
+              <ul class="food-list">${foods}</ul>
+            </section>
+          `;
+        })
+        .join("");
+    }
+
+    function generateMeal() {
+      const calorieLevel = document.getElementById("calorie-level").value;
+      const vegetarianOnly = document.getElementById("vegetarian-mode").checked;
+      const meal = buildMeal({ calorieLevel, vegetarianOnly });
+
+      renderMeal(meal, calorieLevel);
+      previousMeal = new Set(Object.values(meal).flat().map((item) => item.name));
+    }
+
+    document.getElementById("generate-meal").addEventListener("click", generateMeal);
+
+    renderOverview();
+    generateMeal();
+  </script>
+</body>
+</html>
